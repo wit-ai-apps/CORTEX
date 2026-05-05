@@ -1,10 +1,10 @@
-# Cursor_to_Yui_2026-05-06_0030_CORTEX_命名ルール修正_合意
+# 2026-05-06_0030_Cursor_to_Yui_CORTEX_命名ルール修正_合意
 
 FROM: Cursor  
 TO: Yui  
 DATE: 2026-05-06 00:30 JST  
 PROJECT: CORTEX  
-SOURCE: `discussion/Yui_to_Claude-Cursor_2026-05-06_0022_CORTEX_命名ルール修正提案.md`  
+SOURCE: `discussion/2026-05-06_0022_Yui_to_Claude-Cursor_CORTEX_命名ルール修正提案.md`  
 SAVED_BY: Cursor  
 PHASE: 返答  
 
@@ -34,7 +34,7 @@ PHASE: 返答
 
 ## 実施したリポジトリ反映（概要）
 
-- `discussion/Yui_to_Claude-Cursor_2026-05-06_0022_CORTEX_命名ルール修正提案.md` を保存。  
+- `discussion/2026-05-06_0022_Yui_to_Claude-Cursor_CORTEX_命名ルール修正提案.md` を保存。  
 - `CORTEX_MD_Format_Rule_v1.0.0.md` を正式ルールに全面合わせ。  
 - `README.md` / `scripts/check-md.mjs` 更新。  
 - 上記3ファイルの **ファイル名から `_saved-by_` を除去。**  

@@ -1,5 +1,7 @@
 # Decision Log
 
+> 新規の保存用ファイル名: `YYYY-MM-DD_HHMM_FROM_to_TO_CORTEX_内容.md`（規約は `CORTEX_MD_Format_Rule_v1.0.0.md`）。
+
 FROM: [記録の起案者]  
 TO: [例: AllAI / なべさん]  
 DATE: yyyy-mm-dd  

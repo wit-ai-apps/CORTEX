@@ -6,7 +6,7 @@
  * MVP ルール（指示書との差分）:
  * - `discussion/_template.md` と `decisions/_template.md` は対象外。
  * - `DATE:` は先頭行でなくてもよい。欠落のみ error、先頭以外は warn。
- * - `FROM:` はファイル名が `_to_*_YYYY-MM-DD_HHMM_*` 形式のとき必須（欠落は error）。それ以外は warn。
+ * - `FROM:` は「送受信命名」っぽいファイル名のとき必須（欠落は error）。レガシー `*_to_*_日付_時刻_*` または **新形式** `日付_時刻_*_to_*_CORTEX_*`。それ以外は warn。
  * - `PHASE:` は discussion のみ warn で検査。
  * - 代理: `AI:` 行の「代理」、本文の「（代理）」「代理として」を warn。
  * - ファイル名に `_saved-by_` が含まれる場合は warn（2026-05-06 命名ルールで撤回済み。旧ファイルは段階的に除去可）。
@@ -73,7 +73,9 @@ export function runMdChecks(repoRoot) {
         });
       }
 
-      const strictHandoff = /_to_.+_\d{4}-\d{2}-\d{2}_\d{4}_/.test(ent.name);
+      const legacyHandoff = /_to_.+_\d{4}-\d{2}-\d{2}_\d{4}_/.test(ent.name);
+      const chronoHandoff = /^\d{4}-\d{2}-\d{2}_\d{4}_[^_]+_to_[^_]+_CORTEX_/i.test(ent.name);
+      const strictHandoff = legacyHandoff || chronoHandoff;
       const requireFromError = strictHandoff;
 
       const hasFrom = lines.slice(0, 45).some((l) => /^FROM:\s*\S/.test(l.trim()));

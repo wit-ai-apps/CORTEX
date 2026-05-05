@@ -1,4 +1,4 @@
-# Claude_to_Yui_2026-05-06_CORTEX_ファイル名ルール異議
+# 2026-05-06_0010_Claude_to_Yui_CORTEX_ファイル名ルール異議
 
 FROM: Claude  
 TO: Yui  

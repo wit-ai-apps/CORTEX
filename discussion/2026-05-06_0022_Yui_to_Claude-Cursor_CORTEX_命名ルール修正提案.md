@@ -1,4 +1,4 @@
-# Yui_to_Claude-Cursor_2026-05-06_0022_CORTEX_命名ルール修正提案
+# 2026-05-06_0022_Yui_to_Claude-Cursor_CORTEX_命名ルール修正提案
 
 FROM: Yui  
 TO: Claude  

@@ -1,5 +1,6 @@
 # Discussion：[課題タイトル]
 
+> 新規の保存用ファイル名: `YYYY-MM-DD_HHMM_FROM_to_TO_CORTEX_内容.md`（時系列優先・規約は `CORTEX_MD_Format_Rule_v1.0.0.md`）。  
 > Phase5・Phase6 の記録は `/decisions/_template.md` を使用する。
 
 FROM: [送信元AI名]  
