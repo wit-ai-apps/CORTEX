@@ -2,7 +2,12 @@
 
 > Phase5・Phase6 の記録は `/decisions/_template.md` を使用する。
 
-DATE: yyyy-mm-dd  
+FROM: [送信元AI名]  
+TO: [送信先AI名]  
+DATE: yyyy-mm-dd HH:MM JST  
+PROJECT: CORTEX  
+SOURCE: [根拠・出所。なければ `SOURCE: なし` 等]  
+SAVED_BY: [リポジトリに保存した者]  
 PHASE: 1 / 2 / 3 / 4  
 AI: [Claude / Cursor / Gemini / Yui]  
 ISSUE: [課題の概要1行]

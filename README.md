@@ -92,10 +92,14 @@ AIは提案・比較・整理する
 ## MD命名・送信フォーマット
 
 他AIへ渡す指示・設計・結果の Markdown は、ファイル名と内部ヘッダを統一する。  
-ヘッダには **SOURCE:**（内容の出所・根拠）と **SAVED_BY:**（リポジトリへ保存した者）を含める（Yui 追補）。  
-詳細は [CORTEX_MD_Format_Rule_v1.0.0.md](./CORTEX_MD_Format_Rule_v1.0.0.md)（Yui・v1.0.0）を参照する。
 
-**Decision Log**（`/decisions/_template.md`）にも **SOURCE:** / **SAVED_BY:** を記載する。
+- **ファイル名（新規必須）:** `FROM_to_TO_YYYY-MM-DD_HHMM_CORTEX_内容_saved-by_保存者.md`（例: `_saved-by_Cursor`）  
+- **ヘッダ必須:** `FROM` / `TO` / `DATE` / `PROJECT` / `SOURCE` / `SAVED_BY` / `PHASE`  
+
+詳細は [CORTEX_MD_Format_Rule_v1.0.0.md](./CORTEX_MD_Format_Rule_v1.0.0.md)（Yui・v1.0.0）を参照する。  
+**Decision Log**（`/decisions/_template.md`）にも上記を記載する。
+
+**Cursor:** リポジトリへ変更を入れた作業の完了時は、**待たずに** `discussion` に `Cursor_to_Yui_*_作業報告_saved-by_Cursor.md` を追加する（`CORTEX_MD_Format_Rule` の「Cursor 作業完了時」を参照）。
 
 ---
 
