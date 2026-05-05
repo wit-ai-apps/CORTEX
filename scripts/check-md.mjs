@@ -9,6 +9,7 @@
  * - `FROM:` はファイル名が `_to_*_YYYY-MM-DD_HHMM_*` 形式のとき必須（欠落は error）。それ以外は warn。
  * - `PHASE:` は discussion のみ warn で検査。
  * - 代理: `AI:` 行の「代理」、本文の「（代理）」「代理として」を warn。
+ * - ファイル名に `_saved-by_` が含まれる場合は warn（2026-05-06 命名ルールで撤回済み。旧ファイルは段階的に除去可）。
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -43,6 +44,13 @@ export function runMdChecks(repoRoot) {
 
       const filePath = path.join(dir, ent.name);
       const relFile = path.join(rel, ent.name).replace(/\\/g, "/");
+      if (ent.name.includes("_saved-by_")) {
+        issues.push({
+          level: "warn",
+          file: relFile,
+          msg: "ファイル名に _saved-by_（命名ルール撤回済み 2026-05-06）。新規は付けず、旧ファイルは段階的にリネーム可",
+        });
+      }
       let text;
       try {
         text = fs.readFileSync(filePath, "utf8");
