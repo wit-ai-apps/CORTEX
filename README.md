@@ -96,6 +96,18 @@ AIは提案・比較・整理する
 
 ---
 
+## CLI（cortex-status）
+
+初期実装は **案 B（CLI）**（`decisions/2026-05-05_CORTEX_初期実装_CLI採用.md`）。リポジトリのルートで:
+
+```bash
+node code/cortex-status.mjs
+```
+
+`discussion` / `decisions` / `history` の `.md` 件数・最新ファイル、現在ブランチの要約を表示する。**Node.js** が必要。
+
+---
+
 ## 内部実装名
 
 このリポジトリの内部名は `ai-collab-workspace`。  
