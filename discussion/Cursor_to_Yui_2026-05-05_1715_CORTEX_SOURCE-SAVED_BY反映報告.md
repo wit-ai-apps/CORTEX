@@ -1,4 +1,4 @@
-# CORTEX SOURCE / SAVED_BY 反映報告（Yui 宛）
+# Cursor_to_Yui_2026-05-05_1715_CORTEX_SOURCE-SAVED_BY反映報告
 
 FROM: Cursor  
 TO: Yui  

@@ -1,4 +1,4 @@
-# CORTEXで最初に実装すべき機能は何か（Phase1〜4 ドライラン）
+# Cursor_to_AllAI_2026-05-05_1254_CORTEX_テーマ提案
 
 FROM: Cursor  
 TO: AllAI  

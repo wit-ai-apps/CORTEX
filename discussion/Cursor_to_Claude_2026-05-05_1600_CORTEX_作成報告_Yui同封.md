@@ -1,4 +1,4 @@
-# CORTEX 実装・文書反映の作成報告（Claude・Yui 宛）
+# Cursor_to_Claude_2026-05-05_1600_CORTEX_作成報告_Yui同封
 
 FROM: Cursor  
 TO: Claude / Yui  

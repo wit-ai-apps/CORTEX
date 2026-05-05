@@ -1,4 +1,4 @@
-# 2026-05-06_0042｜CORTEX｜命名ルール時系列修正依頼
+# 2026-05-06_0042_Yui_to_AllAI_CORTEX_命名ルール時系列修正依頼
 
 FROM: Yui
 TO: AllAI

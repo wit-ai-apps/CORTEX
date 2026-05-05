@@ -1,4 +1,4 @@
-# GitHub へ反映（push）する手順まとめ
+# Cursor_to_AllAI_2026-05-05_1800_CORTEX_GitHub反映手順
 
 FROM: Cursor  
 TO: AllAI  

@@ -1,4 +1,4 @@
-# CORTEX 現状説明（ユイ宛）
+# Cursor_to_Yui_2026-05-05_1500_CORTEX_現状説明
 
 FROM: Cursor  
 TO: Yui  
