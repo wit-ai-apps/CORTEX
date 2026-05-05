@@ -2,7 +2,9 @@
 
 DATE: yyyy-mm-dd  
 PROJECT: CORTEX  
-ISSUE: [課題の概要1行]
+ISSUE: [課題の概要1行]  
+SOURCE: [決定の出所・根拠（例: 参照した discussion ファイル、口頭）]  
+SAVED_BY: [このログをリポジトリに保存した者]
 
 ---
 

@@ -1,7 +1,8 @@
 # CORTEX MD命名・送信フォーマット規約 v1.0.0
 
-DATE: 2026-05-05 12:40 JST
-AUTHOR: Yui
+DATE: 2026-05-05 12:40 JST  
+AUTHOR: Yui  
+追記: SOURCE / SAVED_BY を必須ヘッダに追加（Yui）
 
 ---
 
@@ -39,6 +40,8 @@ FROM: 送信元AI名
 TO: 送信先AI名
 DATE: YYYY-MM-DD HH:MM JST
 PROJECT: プロジェクト名
+SOURCE: 内容の出所・根拠（例: 貼付元ファイル名、チャット、口頭、URL）
+SAVED_BY: このファイルをリポジトリに保存した者（人名または AI 名）
 
 ---
 
@@ -54,6 +57,8 @@ PROJECT: プロジェクト名
 - TO（誰に渡すか）
 - DATE（日時）
 - PROJECT（対象プロジェクト）
+- SOURCE（上記。根拠・出自がない場合は `SOURCE: なし` 等と明示）
+- SAVED_BY（誰がコミット／保存したか）
 - 内容（本文）
 
 ---
