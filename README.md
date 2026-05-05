@@ -89,6 +89,13 @@ AIは提案・比較・整理する
 
 ---
 
+## MD命名・送信フォーマット
+
+他AIへ渡す指示・設計・結果の Markdown は、ファイル名と内部ヘッダを統一する。  
+詳細は [CORTEX_MD_Format_Rule_v1.0.0.md](./CORTEX_MD_Format_Rule_v1.0.0.md)（Yui・v1.0.0）を参照する。
+
+---
+
 ## 内部実装名
 
 このリポジトリの内部名は `ai-collab-workspace`。  
