@@ -5,6 +5,7 @@
  *
  * MVP ルール（指示書との差分）:
  * - `discussion/_template.md` と `decisions/_template.md` は対象外。
+ * - スキャン対象ディレクトリ: `discussion`, `decisions`, `history`, `context`（存在するもののみ）。
  * - `DATE:` は先頭20行以内にあれば位置に関する warn なし。欠落は error。20行超は warn。
  * - `FROM:` は「送受信命名」っぽいファイル名のとき必須（欠落は error）。レガシー `*_to_*_日付_時刻_*` または **新形式** `日付_時刻_*_to_*_CORTEX_*`。それ以外は warn。
  * - `PHASE:` は discussion のみ warn で検査。
@@ -31,6 +32,8 @@ export function runMdChecks(repoRoot) {
   const scanDirs = [
     { rel: "discussion", requirePhase: true },
     { rel: "decisions", requirePhase: false },
+    { rel: "history", requirePhase: false },
+    { rel: "context", requirePhase: false },
   ];
 
   for (const { rel, requirePhase } of scanDirs) {
