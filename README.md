@@ -46,7 +46,8 @@ Phase6：決定保存       → /decisions に記録
 Claude ↔ Yui など **Cursor 外の議論**で、修正理由や判断背景が見えにくい問題を補う。
 
 - **ファイル名（例）:** `YYYY-MM-DD_HHMM_CTX-XXX_CORTEX_内容.md`  
-- **運用:** 長文化や全履歴のコピーはしない。**要約のみ。** 過去 `discussion` をすべて Context 化しない。
+- **一覧:** **`context/CTX-INDEX.md`** が **Context一覧管理ファイル**（ID・タイトル・作成日時・概要・関連 `discussion` / `decisions`）。  
+- **運用:** 新規 Context は **① Context ファイル作成 → ② `CTX-INDEX.md` に登録** の順を固定する。長文化や全履歴のコピーはしない。**要約のみ。** 過去 `discussion` をすべて Context 化しない。
 
 **今後の指示書には**、読むべき要約があれば次を必ず入れる。
 
