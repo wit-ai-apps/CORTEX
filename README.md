@@ -104,7 +104,17 @@ AIは提案・比較・整理する
 node code/cortex-status.mjs
 ```
 
-`discussion` / `decisions` / `history` の `.md` 件数・最新ファイル、現在ブランチの要約を表示する。**Node.js** が必要。
+表示は **CLI MVP**（`decisions/2026-05-05_CORTEX_CLI実装指示_v1.0.0.md`）に準拠。続けて `scripts/check-md.mjs` の結果を表示する。
+
+Markdown 検査のみ実行する場合:
+
+```bash
+node scripts/check-md.mjs
+```
+
+**Node.js** が必要。外部通信・トークンは使わない。
+
+検査の詳細（`DATE:` が `#` 先頭のファイルは warn、命名規約ファイルの `FROM:` 欠落は error 等）は `scripts/check-md.mjs` 先頭コメントを参照。
 
 ---
 

@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 /**
- * cortex-status — CORTEX リポジトリのスナップショットを表示する（案 B / Step1）
+ * cortex-status — CORTEX CLI MVP（案 B）
  * 使い方: リポジトリルートで `node code/cortex-status.mjs`
+ * 検査: `scripts/check-md.mjs` を import（Actions では同スクリプトを直接実行可能）
  */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { runMdChecks } from "../scripts/check-md.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -21,7 +23,7 @@ function findRepoRoot(startDir) {
 
 function listMarkdownStats(dir) {
   if (!fs.existsSync(dir)) {
-    return { count: 0, files: [], latest: null };
+    return { count: 0, latest: null };
   }
   const files = fs
     .readdirSync(dir, { withFileTypes: true })
@@ -35,9 +37,24 @@ function listMarkdownStats(dir) {
 
   return {
     count: files.length,
-    files: files.map((f) => f.name),
     latest: files[0] ?? null,
   };
+}
+
+function countFilesRecursive(dir) {
+  if (!fs.existsSync(dir)) return 0;
+  let n = 0;
+  const stack = [dir];
+  while (stack.length) {
+    const d = stack.pop();
+    const ents = fs.readdirSync(d, { withFileTypes: true });
+    for (const e of ents) {
+      const full = path.join(d, e.name);
+      if (e.isDirectory()) stack.push(full);
+      else if (e.isFile()) n += 1;
+    }
+  }
+  return n;
 }
 
 const repoRoot = findRepoRoot(__dirname);
@@ -49,30 +66,27 @@ const codeDir = path.join(repoRoot, "code");
 const disc = listMarkdownStats(discussionDir);
 const dec = listMarkdownStats(decisionsDir);
 const hist = listMarkdownStats(historyDir);
+const codeCount = countFilesRecursive(codeDir);
 
-console.log("CORTEX status");
-console.log("─".repeat(40));
-console.log(`repo:     ${repoRoot}`);
-console.log(`branch:   ${tryGitBranch(repoRoot)}`);
+console.log("CORTEX STATUS");
 console.log("");
-console.log(`discussion/  .md files: ${disc.count}`);
-if (disc.latest) console.log(`  latest:   ${disc.latest.name}`);
-console.log(`decisions/   .md files: ${dec.count}`);
-if (dec.latest) console.log(`  latest:   ${dec.latest.name}`);
-console.log(`history/     .md files: ${hist.count}`);
-if (hist.latest) console.log(`  latest:   ${hist.latest.name}`);
+console.log(`discussion files: ${disc.count}`);
+console.log(`decisions files: ${dec.count}`);
+console.log(`history files: ${hist.count}`);
+console.log(`code files: ${codeCount}`);
 console.log("");
-console.log(`code/        cortex-status.mjs: ${fs.existsSync(path.join(codeDir, "cortex-status.mjs")) ? "yes" : "no"}`);
+console.log(`latest discussion: ${disc.latest ? disc.latest.name : "none"}`);
+console.log(`latest decision: ${dec.latest ? dec.latest.name : "none"}`);
+console.log("");
 console.log("─".repeat(40));
-console.log("Run from repo root: node code/cortex-status.mjs");
-
-function tryGitBranch(root) {
-  const head = path.join(root, ".git", "HEAD");
-  try {
-    const raw = fs.readFileSync(head, "utf8").trim();
-    const m = raw.match(/^ref: refs\/heads\/(.+)$/);
-    return m ? m[1] : raw.slice(0, 7) || "(detached)";
-  } catch {
-    return "(unknown)";
+const { issues } = runMdChecks(repoRoot);
+if (issues.length === 0) {
+  console.log("check-md: 指摘なし（MVP）");
+} else {
+  const errN = issues.filter((i) => i.level === "error").length;
+  const warnN = issues.filter((i) => i.level === "warn").length;
+  console.log(`check-md: error ${errN}, warn ${warnN}`);
+  for (const i of issues) {
+    console.log(`  [${i.level}] ${i.file}: ${i.msg}`);
   }
 }
