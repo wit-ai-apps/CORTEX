@@ -21,7 +21,8 @@ function findRepoRoot(startDir) {
   }
 }
 
-function listMarkdownStats(dir) {
+function listMarkdownStats(dir, options = {}) {
+  const { excludeNamesFromLatest = [] } = options;
   if (!fs.existsSync(dir)) {
     return { count: 0, latest: null };
   }
@@ -35,9 +36,12 @@ function listMarkdownStats(dir) {
     })
     .sort((a, b) => b.mtime - a.mtime);
 
+  const latest =
+    files.find((f) => !excludeNamesFromLatest.includes(f.name)) ?? null;
+
   return {
     count: files.length,
-    latest: files[0] ?? null,
+    latest,
   };
 }
 
@@ -64,7 +68,7 @@ const historyDir = path.join(repoRoot, "history");
 const codeDir = path.join(repoRoot, "code");
 
 const disc = listMarkdownStats(discussionDir);
-const dec = listMarkdownStats(decisionsDir);
+const dec = listMarkdownStats(decisionsDir, { excludeNamesFromLatest: ["_template.md"] });
 const hist = listMarkdownStats(historyDir);
 const codeCount = countFilesRecursive(codeDir);
 

@@ -2,14 +2,14 @@
 
 > 新規の保存用ファイル名: `YYYY-MM-DD_HHMM_FROM_to_TO_CORTEX_内容.md`（規約は `CORTEX_MD_Format_Rule_v1.0.0.md`）。
 
-FROM: [記録の起案者]  
-TO: [例: AllAI / なべさん]  
+FROM: なべさん  
+TO: AllAI  
 DATE: yyyy-mm-dd  
 PROJECT: CORTEX  
 ISSUE: [課題の概要1行]  
 SOURCE: [決定の出所・根拠（例: 参照した discussion ファイル、口頭）]  
 SAVED_BY: [このログをリポジトリに保存した者]  
-PHASE: [例: Phase6 / 記録]
+PHASE: Decision
 
 ---
 

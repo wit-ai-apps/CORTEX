@@ -5,7 +5,7 @@
  *
  * MVP ルール（指示書との差分）:
  * - `discussion/_template.md` と `decisions/_template.md` は対象外。
- * - `DATE:` は先頭行でなくてもよい。欠落のみ error、先頭以外は warn。
+ * - `DATE:` は先頭20行以内にあれば位置に関する warn なし。欠落は error。20行超は warn。
  * - `FROM:` は「送受信命名」っぽいファイル名のとき必須（欠落は error）。レガシー `*_to_*_日付_時刻_*` または **新形式** `日付_時刻_*_to_*_CORTEX_*`。それ以外は warn。
  * - `PHASE:` は discussion のみ warn で検査。
  * - 代理: `AI:` 行の「代理」、本文の「（代理）」「代理として」を warn。
@@ -64,12 +64,12 @@ export function runMdChecks(repoRoot) {
       // DATE: 仕様は「1行目」だが CORTEX 実ファイルは # タイトル先頭が多い → 先頭ブロック内を検査
       const dateLineIndex = lines.findIndex((l) => /^DATE:\s*\S/.test(l.trim()));
       if (dateLineIndex === -1) {
-        issues.push({ level: "error", file: relFile, msg: "DATE: が見つからない（先頭付近に必須）" });
-      } else if (dateLineIndex !== 0) {
+        issues.push({ level: "error", file: relFile, msg: "DATE: が見つからない（先頭20行以内に必須）" });
+      } else if (dateLineIndex > 19) {
         issues.push({
           level: "warn",
           file: relFile,
-          msg: `DATE: が1行目にない（現在 ${dateLineIndex + 1} 行目）。MVP 推奨は先頭かメタ直後`,
+          msg: `DATE: が先頭20行外（現在 ${dateLineIndex + 1} 行目）。タイトル直後のメタブロック内を推奨`,
         });
       }
 
