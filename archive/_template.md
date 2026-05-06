@@ -1,0 +1,47 @@
+FROM:  
+TO:  
+DATE:  
+DATE_CREATED:  
+PROJECT:  
+SOURCE:  
+SAVED_BY:  
+PHASE:  
+TYPE: ARCHIVE  
+
+ARCHIVE_NAME:  
+ORIGINAL_PATH:  
+ARCHIVE_REASON:  
+RELATED_CONTEXT:  
+RELATED_DECISION:  
+RELATED_HISTORY:  
+STATUS:  
+
+---
+
+# SUMMARY
+
+要約
+
+---
+
+# ORIGINAL RECORD
+
+元ファイル情報
+
+---
+
+# ARCHIVE REASON
+
+なぜ移動したか
+
+---
+
+# IMPACT
+
+影響範囲
+
+---
+
+# NEXT REFERENCE
+
+次回参照先
