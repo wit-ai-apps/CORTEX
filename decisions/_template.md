@@ -1,38 +1,48 @@
 # Decision Log
 
-> 新規の保存用ファイル名: `YYYY-MM-DD_HHMM_FROM_to_TO_CORTEX_内容.md`（規約は `CORTEX_MD_Format_Rule_v1.0.0.md`）。
+> 新規の保存用ファイル名: `YYYY-MM-DD_HHMM_FROM_to_TO_CORTEX_内容.md`（`to` は固定の `_to_`。規約は `CORTEX_MD_Format_Rule_v1.0.0.md`）。**JST の実時刻を先頭に付ける。FROM / TO / PROJECT を含む。**
 
-FROM: なべさん  
-TO: AllAI  
-DATE: yyyy-mm-dd  
-PROJECT: CORTEX  
-ISSUE: [課題の概要1行]  
-SOURCE: [決定の出所・根拠（例: 参照した discussion ファイル、口頭）]  
-SAVED_BY: [このログをリポジトリに保存した者]  
-PHASE: Decision
+FROM:  
+TO:  
+DATE:  
+DATE_CREATED:  
+PROJECT:  
+SOURCE:  
+SAVED_BY:  
+PHASE:  
+TYPE: DECISION  
+
+WHY:  
+ALTERNATIVES:  
+IMPACT:  
+REVIEW_DATE:  
 
 ---
 
-## 選択した案
+# DECISION
 
-SELECTED_PLAN: [案名・提案AI]
+決定事項
 
-## 選択した理由
+---
 
-SELECTED_REASON:
-（なべさんの言葉で記載）
+# REASON
 
-## 却下した案
+なぜこの決定をしたか
 
-| 案名 | 提案AI | 却下理由 |
-|---|---|---|
-| | | |
+---
 
-## 次のアクション
+# OPTIONS
 
-NEXT_ACTION:
-- [ ]
+比較候補
 
-## 記録者
+---
 
-なべさん
+# IMPACT
+
+影響範囲
+
+---
+
+# REVIEW
+
+見直し予定日
