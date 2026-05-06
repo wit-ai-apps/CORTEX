@@ -2,11 +2,10 @@
 
 FROM:  
 TO:  
-DATE: 2026-05-06 16:40 JST  
 DATE_CREATED: 2026-05-06 16:40 JST  
 PROJECT: CORTEX  
 SOURCE:  
-SAVED_BY: Cursor  
+SAVED_BY:  
 PHASE: clock-sync-layer-init  
 TYPE: CLOCK_SYNC  
 
