@@ -1,77 +1,50 @@
 # Discussion：[課題タイトル]
 
-> 新規の保存用ファイル名: `YYYY-MM-DD_HHMM_FROM_to_TO_CORTEX_内容.md`（時系列優先・規約は `CORTEX_MD_Format_Rule_v1.0.0.md`）。  
+> 新規の保存用ファイル名: `YYYY-MM-DD_HHMM_FROM_to_TO_CORTEX_内容.md`（`to` は固定の `_to_`、JST 実時刻先頭。規約は `CORTEX_MD_Format_Rule_v1.0.0.md`）。  
 > Phase5・Phase6 の記録は `/decisions/_template.md` を使用する。
 
-FROM: [送信元AI名]  
-TO: [送信先AI名]  
-DATE: yyyy-mm-dd HH:MM JST  
-PROJECT: CORTEX  
-SOURCE: [根拠・出所。なければ `SOURCE: なし` 等]  
-SAVED_BY: [リポジトリに保存した者]  
-PHASE: 1 / 2 / 3 / 4  
-AI: [Claude / Cursor / Gemini / Yui]  
-ISSUE: [課題の概要1行]
+FROM:  
+TO:  
+DATE:  
+DATE_CREATED:  
+PROJECT:  
+SOURCE:  
+SAVED_BY:  
+PHASE:  
+TYPE: DISCUSSION  
+
+TOPIC:  
+ISSUES:  
+OPEN_QUESTIONS:  
+DECISION_CANDIDATES:  
+PRIORITY:  
 
 ---
 
-## Phase1：提案
+# DISCUSSION
 
-### 提案内容
--
-
-### 理由
--
-
-### 想定リスク
--
+現在の議論内容
 
 ---
 
-## Phase2：比較
+# ISSUES
 
-### 比較対象
-案名：
-
-### 強み
--
-
-### 弱み
--
-
-### 自分の案との差
--
-
-### 採用する場合の注意点
--
+論点整理
 
 ---
 
-## Phase3：グループ化
+# OPEN QUESTIONS
 
-| グループ | 該当案 |
-|---|---|
-| 速度優先 | |
-| 精度優先 | |
-| コスト優先 | |
-| 安全性優先 | |
-| UI維持優先 | |
+未決定事項
 
 ---
 
-## Phase4：自己申告ラベル
+# DECISION CANDIDATES
 
-### 自分の案へのラベル（自己申告のみ）
+次に決める候補
 
-| 軸 | ラベル |
-|---|---|
-| 速度 | 高 / 中 / 低 |
-| 精度 | 高 / 中 / 低 |
-| コスト | 高 / 中 / 低 |
-| 安全性 | 高 / 中 / 低 |
-| 実装難度 | 高 / 中 / 低 |
+---
 
-### 他AI案への異議（任意）
+# NEXT ACTION
 
-案名：  
-異議内容：
+次の行動
