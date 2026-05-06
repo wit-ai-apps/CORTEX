@@ -6,7 +6,7 @@
  * MVP ルール（指示書との差分）:
  * - `discussion/_template.md` と `decisions/_template.md` は対象外。
  * - スキャン対象ディレクトリ: `discussion`, `decisions`, `history`, `context`（存在するもののみ）。
- * - `DATE:` は先頭20行以内にあれば位置に関する warn なし。欠落は error。20行超は warn。
+ * - `DATE:` または `DATE_CREATED:` のいずれかが先頭20行以内にあれば日時あり（欠落は error。20行超は warn）。両方あっても可。
  * - `FROM:` は「送受信命名」っぽいファイル名のとき必須（欠落は error）。レガシー `*_to_*_日付_時刻_*` または **新形式** `日付_時刻_*_to_*_CORTEX_*`。それ以外は warn。
  * - `PHASE:` は discussion のみ warn で検査。
  * - 代理: `AI:` 行の「代理」、本文の「（代理）」「代理として」を warn。
@@ -64,15 +64,24 @@ export function runMdChecks(repoRoot) {
 
       const lines = text.split(/\r?\n/);
 
-      // DATE: 仕様は「1行目」だが CORTEX 実ファイルは # タイトル先頭が多い → 先頭ブロック内を検査
+      // DATE: または DATE_CREATED:（Clock 層）。いずれかが先頭20行内にあれば OK。
       const dateLineIndex = lines.findIndex((l) => /^DATE:\s*\S/.test(l.trim()));
-      if (dateLineIndex === -1) {
-        issues.push({ level: "error", file: relFile, msg: "DATE: が見つからない（先頭20行以内に必須）" });
-      } else if (dateLineIndex > 19) {
+      const dateCreatedLineIndex = lines.findIndex((l) => /^DATE_CREATED:\s*\S/.test(l.trim()));
+      const dateEarly = dateLineIndex !== -1 && dateLineIndex < 20;
+      const dateCreatedEarly = dateCreatedLineIndex !== -1 && dateCreatedLineIndex < 20;
+      if (dateLineIndex === -1 && dateCreatedLineIndex === -1) {
+        issues.push({
+          level: "error",
+          file: relFile,
+          msg: "DATE: も DATE_CREATED: も見つからない（先頭20行以内にどちらか必須）",
+        });
+      } else if (!dateEarly && !dateCreatedEarly) {
+        const showDate = dateLineIndex === -1 ? "—" : `${dateLineIndex + 1}`;
+        const showCreated = dateCreatedLineIndex === -1 ? "—" : `${dateCreatedLineIndex + 1}`;
         issues.push({
           level: "warn",
           file: relFile,
-          msg: `DATE: が先頭20行外（現在 ${dateLineIndex + 1} 行目）。タイトル直後のメタブロック内を推奨`,
+          msg: `DATE: / DATE_CREATED: が先頭20行外（DATE ${showDate} 行目、DATE_CREATED ${showCreated} 行目）。タイトル直後のメタブロック内を推奨`,
         });
       }
 
