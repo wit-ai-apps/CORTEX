@@ -24,7 +24,7 @@ TYPE: REPORT
 ## 実施内容
 
 - Master Index 用に **セクション・表の骨組みのみ**作成（`LATEST_*` の行は運用で追記）。  
-- メタに **`PROJECT: CORTEX`**、**`TYPE: MASTER_INDEX`**、指示パスを **`SOURCE`**、**`DATE` / `DATE_CREATED`**（本稿作成に合わせた時刻）を設定。**`SOURCE_DATE`（指示 16:15）は報告側のみに使用し、`DATE_CREATED` へ流用していない。**  
+- メタに **`PROJECT: CORTEX`**、**`TYPE: MASTER_INDEX`**、**`DATE` / `DATE_CREATED`**（本稿作成に合わせた時刻）、**`SAVED_BY: Cursor`** を記入。**`SOURCE:`** は指示テンプレどおり空欄。**`SOURCE_DATE`（指示 16:15）は報告側のみに使用し、`DATE_CREATED` へ流用していない。**  
 - **既存ファイルは一切変更していない。**
 
 ## check-md結果
