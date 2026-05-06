@@ -22,11 +22,11 @@ TYPE: MASTER_INDEX
 
 | DATE | FILE | TOPIC | STATUS |
 |---|---|---|---|
+| 2026-05-06 18:45 JST | 2026-05-06_1845_Cursor_to_Yui_CORTEX_status-layer-report.md | 2026-05-06_1845_Cursor_to_Yui_CORTEX_status-layer-report | - |
 | 2026-05-06 18:35 JST | 2026-05-06_1835_Cursor_to_Yui_CORTEX_auto-link-layer-report.md | 2026-05-06_1835_Cursor_to_Yui_CORTEX_auto-link-layer-report | - |
 | 2026-05-06 18:22 JST | 2026-05-06_1822_Cursor_to_Yui_CORTEX_master-index-layer-report.md | 2026-05-06_1822_Cursor_to_Yui_CORTEX_master-index-layer-report | - |
 | 2026-05-06 18:15 JST | 2026-05-06_1815_Cursor_to_Yui_CORTEX_code-layer-report.md | 2026-05-06_1815_Cursor_to_Yui_CORTEX_code-layer-report | - |
 | 2026-05-06 18:00 JST | 2026-05-06_1800_Cursor_to_Yui_CORTEX_discussion-layer-report.md | 2026-05-06_1800_Cursor_to_Yui_CORTEX_discussion-layer-report | - |
-| 2026-05-06 17:40 JST | 2026-05-06_1740_Cursor_to_Yui_CORTEX_decision-layer-report.md | 2026-05-06_1740_Cursor_to_Yui_CORTEX_decision-layer-report | - |
 
 ---
 
