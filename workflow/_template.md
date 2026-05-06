@@ -1,0 +1,45 @@
+FROM:  
+TO:  
+DATE:  
+DATE_CREATED:  
+PROJECT:  
+SOURCE:  
+SAVED_BY:  
+PHASE:  
+TYPE: WORKFLOW  
+
+WORKFLOW_NAME:  
+TRIGGER:  
+START_LAYER:  
+END_LAYER:  
+STATUS:  
+
+---
+
+# FLOW
+
+流れ
+
+---
+
+# STEPS
+
+実行順
+
+---
+
+# CHECKPOINT
+
+確認点
+
+---
+
+# RESULT
+
+結果
+
+---
+
+# NEXT FLOW
+
+次の流れ
