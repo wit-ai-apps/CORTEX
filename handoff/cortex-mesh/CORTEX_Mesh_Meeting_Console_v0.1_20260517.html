@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CORTEX Mesh AI Meeting Console v0.1</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --bg2: #151b24;
+      --panel: #1a2230;
+      --border: #2a3548;
+      --text: #e8eef7;
+      --muted: #8b98ad;
+      --accent: #6ea8fe;
+      --ok: #3ecf8e;
+      --warn: #f5c26b;
+      --err: #ff6b6b;
+      --sys: #9aa7ff;
+      font-family: system-ui, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); }
+    #app { display: grid; grid-template-rows: 52px 1fr; height: 100vh; min-height: 0; }
+    #topbar {
+      height: 52px; min-height: 52px; padding: 0 12px;
+      display: flex; align-items: center; gap: 12px;
+      background: var(--bg2); border-bottom: 1px solid var(--border);
+    }
+    #topbar h1 { font-size: 14px; font-weight: 600; margin: 0; flex: 0 0 auto; }
+    #conn-status { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #333b4d; color: var(--muted); }
+    #conn-status.ok { color: var(--text); background: #2a3548; }
+    #conn-status.busy { color: var(--accent); }
+    #conn-status.err { background: #3d2020; color: var(--err); }
+    #conn-status.warn { background: #3d3520; color: var(--warn); }
+    #workspace {
+      display: grid; grid-template-columns: 180px 1fr 320px;
+      min-height: 0; min-width: 0;
+    }
+    #sidebar {
+      width: 180px; min-width: 180px;
+      background: var(--bg2); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 4px; padding: 8px;
+      min-height: 0;
+    }
+    .sb-btn {
+      text-align: left; padding: 8px 10px; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--panel); color: var(--text);
+      cursor: pointer; font-size: 12px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .sb-btn:hover { border-color: var(--accent); }
+    .sb-btn.active { border-color: var(--accent); background: #243049; }
+    .sb-badge {
+      font-size: 10px; background: var(--err); color: #fff; border-radius: 8px; padding: 1px 6px; min-width: 18px; text-align: center;
+    }
+    .sb-badge:empty { display: none; }
+    #main-panel {
+      display: flex; flex-direction: column; min-width: 0; min-height: 0;
+      background: var(--bg);
+    }
+    #phase-bar {
+      flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+    }
+    .ph {
+      font-size: 11px; padding: 6px 10px; border-radius: 6px; cursor: pointer;
+      border: 1px solid var(--border); background: var(--panel); color: var(--muted);
+    }
+    .ph.active { border-color: var(--accent); color: var(--text); background: #243049; }
+    #panels { flex: 1; overflow: hidden; position: relative; min-height: 0; }
+    .panel {
+      position: absolute; inset: 0; display: none; flex-direction: column; min-height: 0;
+    }
+    .panel.active { display: flex; }
+    #panel-meeting {
+      display: flex; flex-direction: column; height: 100%; overflow: hidden; min-height: 0;
+    }
+    .chat-scroll { flex: 1; overflow-y: auto; min-height: 0; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+    #compose { flex-shrink: 0; border-top: 1px solid var(--border); padding: 8px; background: var(--bg2); min-height: 0; }
+    .compose-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; margin-bottom: 6px; }
+    .compose-row label { font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
+    select, textarea, input[type="text"], input[type="password"] {
+      background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 12px;
+    }
+    textarea { width: 100%; min-height: 64px; resize: vertical; }
+    button.btn {
+      background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+      padding: 8px 12px; font-size: 12px; cursor: pointer;
+    }
+    button.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.btn-primary { background: #2e4a7a; border-color: var(--accent); }
+    #right-panel {
+      width: 320px; min-width: 320px; border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 8px; padding: 8px; background: var(--bg2);
+      min-height: 0;
+    }
+    .rp-topic, .rp-section { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px; flex-shrink: 0; }
+    .rp-label { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+    .rp-agreed { color: var(--ok); }
+    .rp-conflict { color: var(--warn); }
+    .rp-pending { color: var(--accent); }
+    .rp-next { color: var(--sys); }
+    .rp-list { display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto; min-height: 0; }
+    .rp-item { display: flex; gap: 6px; align-items: flex-start; font-size: 11px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+    .rp-speaker { flex: 0 0 auto; color: var(--accent); font-weight: 600; }
+    .rp-summary { flex: 1; min-width: 0; word-break: break-word; color: var(--text); }
+    .rp-item .x { flex: 0 0 auto; cursor: pointer; border: none; background: transparent; color: var(--muted); }
+    #rp-next-action { width: 100%; min-height: 72px; font-size: 12px; }
+    .brow { display: flex; gap: 10px; align-items: flex-start; }
+    .avatar {
+      flex: 0 0 36px; width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
+      background: #2a3548; border: 1px solid var(--border);
+    }
+    .brow.sp-nabe .avatar { background: #3d2a20; }
+    .brow.sp-yui .avatar { background: #2a3d30; }
+    .brow.sp-claude .avatar { background: #2a2a48; }
+    .brow.sp-gemini .avatar { background: #2a3840; }
+    .brow.sp-cursor .avatar { background: #303838; }
+    .brow.sp-system .avatar { background: #333; }
+    .bubble-wrap { flex: 1; min-width: 0; }
+    .bmeta { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+    .bubble {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; white-space: pre-wrap; word-break: break-word; font-size: 13px; line-height: 1.45;
+    }
+    .brow.sp-system .bubble { border-color: #444a60; color: var(--muted); }
+    .reading-bubble { border-style: dashed; color: var(--accent); }
+    .bubble-tools { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+    .bubble-tools button { font-size: 11px; padding: 4px 6px; }
+    .placeholder-panel { padding: 16px; color: var(--muted); font-size: 13px; line-height: 1.6; overflow-y: auto; min-height: 0; flex: 1; }
+    #debug-log { font-family: ui-monospace, monospace; font-size: 11px; white-space: pre-wrap; flex: 1; overflow-y: auto; min-height: 0; background: #0a0c10; border: 1px solid var(--border); border-radius: 6px; padding: 8px; color: #c8d0e0; }
+    .settings-grid { display: grid; gap: 8px; font-size: 12px; }
+    .settings-grid label { color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+    .export-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    h2 { font-size: 14px; margin: 0 0 8px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header id="topbar">
+      <h1>CORTEX Mesh AI Meeting Console <span style="color:var(--muted);font-weight:400">v0.1</span></h1>
+      <span id="conn-status" class="warn">未接続</span>
+      <button type="button" class="btn" id="btn-relay" title="Relay未完了時は黄色ステータス">Relay実行</button>
+      <span style="flex:1"></span>
+      <span id="project-label" style="font-size:11px;color:var(--muted)">PROJECT: —</span>
+    </header>
+    <div id="workspace">
+      <nav id="sidebar">
+        <button type="button" class="sb-btn active" data-panel="panel-meeting">会議 <span class="sb-badge" id="badge-meeting"></span></button>
+        <button type="button" class="sb-btn" data-panel="panel-relay">Relay</button>
+        <button type="button" class="sb-btn" data-panel="panel-projects">プロジェクト</button>
+        <button type="button" class="sb-btn" data-panel="panel-theme">テーマ</button>
+        <button type="button" class="sb-btn" data-panel="panel-debuglog">デバッグ <span class="sb-badge" id="badge-dbg"></span></button>
+        <button type="button" class="sb-btn" data-panel="panel-settings">設定</button>
+      </nav>
+      <main id="main-panel">
+        <div id="phase-bar"></div>
+        <div id="panels">
+          <section id="panel-meeting" class="panel active">
+            <div class="chat-scroll" id="chat-scroll"></div>
+          </section>
+          <section id="panel-relay" class="panel">
+            <div class="placeholder-panel">
+              <strong>Relay（v0.1）</strong><br />
+              外部サービス連携はスコープ外です。「Relay実行」を押すと内部フラグのみ確立し、ステータスの「relay未実行」が解消されます。未実装・未接続の挙動はログに正直に残します。
+            </div>
+          </section>
+          <section id="panel-projects" class="panel">
+            <div class="placeholder-panel">
+              プロジェクト名は<b>設定</b>パネルの PROJECT で編集し、localStorage に保存されます。
+            </div>
+          </section>
+          <section id="panel-theme" class="panel">
+            <div class="placeholder-panel">
+              TOPIC は右パネル「CURRENT TOPIC」で編集できます（即時保存）。
+            </div>
+          </section>
+          <section id="panel-debuglog" class="panel">
+            <div style="display:flex;gap:8px;padding:8px;flex-shrink:0">
+              <button type="button" class="btn" id="btn-dbg-copy">全コピー</button>
+              <button type="button" class="btn" id="btn-dbg-clear">クリア</button>
+            </div>
+            <div id="debug-log"></div>
+          </section>
+          <section id="panel-settings" class="panel">
+            <div class="placeholder-panel" style="flex:0">
+              <h2>設定（localStorage）</h2>
+              <div class="settings-grid">
+                <label>PROJECT <input type="text" id="set-project" /></label>
+                <label>OpenRouter API キー <input type="password" id="set-api-key" autocomplete="off" /></label>
+                <label>API URL <input type="text" id="set-api-url" /></label>
+                <label><input type="checkbox" id="set-auto-mode" /> 自動モード（v0.1では参照のみ・自動連鎖は未実装）</label>
+                <label>phases JSON（上級者向け・不正JSONはログにERROR）</label>
+                <textarea id="set-phases-json" style="min-height:180px;font-family:monospace"></textarea>
+                <div>
+                  <button type="button" class="btn btn-primary" id="btn-settings-save">保存</button>
+                </div>
+              </div>
+              <div class="export-row">
+                <button type="button" class="btn" id="btn-export-summary">discussion_summary → コピー</button>
+                <button type="button" class="btn" id="btn-export-json">full_history.json → コピー</button>
+                <button type="button" class="btn" id="btn-export-report">report.md → コピー</button>
+              </div>
+              <p style="color:var(--muted);font-size:11px">ファイル保存は行いません（仕様）。クリップボードにのみ出力します。</p>
+            </div>
+          </section>
+        </div>
+        <footer id="compose">
+          <div class="compose-row">
+            <label>Speaker<select id="cv-speaker"></select></label>
+            <label>Kind<select id="cv-kind"></select></label>
+            <label>Phase<select id="cv-phase"></select></label>
+          </div>
+          <textarea id="cv-body" placeholder="発言内容…"></textarea>
+          <div class="compose-row" style="margin-top:8px">
+            <button type="button" class="btn" id="btn-add-msg">発言を追加</button>
+            <button type="button" class="btn btn-primary" id="btn-send-ai">AIに送信（OpenRouter）</button>
+          </div>
+          <p id="compose-hint" style="font-size:11px;color:var(--muted);margin:6px 0 0">APIキー未入力時は「AIに送信」は無効です。</p>
+        </footer>
+      </main>
+      <aside id="right-panel">
+        <div id="rp-topic" class="rp-topic">
+          <div class="rp-label">📌 CURRENT TOPIC</div>
+          <input type="text" id="topic-input" placeholder="トピックを入力" style="width:100%" />
+          <div id="rp-topic-text" style="font-size:12px;margin-top:6px;color:var(--muted)">（未設定）</div>
+        </div>
+        <div class="rp-section">
+          <div class="rp-label rp-agreed">✅ AGREED</div>
+          <div id="rp-agreed-list" class="rp-list"></div>
+        </div>
+        <div class="rp-section">
+          <div class="rp-label rp-conflict">⚠ CONFLICT</div>
+          <div id="rp-conflict-list" class="rp-list"></div>
+        </div>
+        <div class="rp-section">
+          <div class="rp-label rp-pending">🔄 PENDING</div>
+          <div id="rp-pending-list" class="rp-list"></div>
+        </div>
+        <div class="rp-section">
+          <div class="rp-label rp-next">➡ NEXT ACTION</div>
+          <textarea id="rp-next-action" placeholder="次の指示を入力…"></textarea>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <script>
+(function () {
+  'use strict';
+
+  const SPEAKERS = ['なべさん', 'Yui', 'Claude', 'Gemini', 'Cursor', 'SYSTEM'];
+  const KINDS = ['message', 'quote', 'instruction', 'system', 'error'];
+
+  const DEFAULT_PHASES = [
+    { number: 1, label: 'Yui整理', role: 'review', assigned_ai: 'Yui', model: 'openai/gpt-4o' },
+    { number: 2, label: 'Claude分析', role: 'analysis', assigned_ai: 'Claude', model: 'anthropic/claude-3.5-sonnet' },
+    { number: 3, label: 'Gemini視点', role: 'review', assigned_ai: 'Gemini', model: 'google/gemini-pro-1.5' },
+    { number: 4, label: 'Yui矛盾整理', role: 'verification', assigned_ai: 'Yui', model: 'openai/gpt-4o' },
+    { number: 5, label: 'Cursor指示化', role: 'implementation', assigned_ai: 'Cursor', model: 'anthropic/claude-3.5-sonnet' },
+    { number: 6, label: '確認待ち', role: 'human_review', assigned_ai: 'なべさん', model: null },
+  ];
+
+  const LS = {
+    key: 'cm_api_key',
+    url: 'cm_api_url',
+    phases: 'cm_phases',
+    auto: 'cm_auto_mode',
+    messages: 'cm_messages',
+    meeting: 'cm_meeting_state',
+    relay: 'cm_relay_done',
+  };
+
+  const API_DEFAULT = 'https://openrouter.ai/api/v1/chat/completions';
+
+  let phases = [];
+  /** @type {Array<object>} */
+  let messages = [];
+  let meetingState = {
+    session_id: '',
+    project: '（未設定）',
+    current_topic: '',
+    agreed: [],
+    conflict: [],
+    pending: [],
+    next_action: '',
+  };
+  let relayDone = false;
+  let autoMode = false;
+  let currentPhaseNo = 1;
+  let debugErrorCount = 0;
+  /** @type {string|null} */
+  let busyTimer = null;
+
+  const el = (id) => document.getElementById(id);
+
+  function jstNow() {
+    return new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', hour12: false });
+  }
+
+  function logDbg(level, msg) {
+    const d = el('debug-log');
+    const line = '[' + level + '] ' + jstNow() + ' ' + msg + '\n';
+    d.textContent += line;
+    d.scrollTop = d.scrollHeight;
+    if (level === 'ERROR') {
+      debugErrorCount++;
+      el('badge-dbg').textContent = String(debugErrorCount);
+    }
+  }
+
+  function speakerClass(sp) {
+    const m = {
+      'なべさん': 'sp-nabe',
+      'Yui': 'sp-yui',
+      'Claude': 'sp-claude',
+      'Gemini': 'sp-gemini',
+      'Cursor': 'sp-cursor',
+      'SYSTEM': 'sp-system',
+    };
+    return m[sp] || 'sp-system';
+  }
+
+  function initialFor(sp) {
+    if (sp === 'なべさん') return 'な';
+    if (sp === 'Cursor') return 'Cr';
+    return sp.slice(0, 1);
+  }
+
+  function summarize60(s) {
+    const t = (s || '').replace(/\s+/g, ' ').trim();
+    return t.length <= 60 ? t : t.slice(0, 60) + '…';
+  }
+
+  function getApiKey() {
+    return (localStorage.getItem(LS.key) || '').trim();
+  }
+
+  function getApiUrl() {
+    return (localStorage.getItem(LS.url) || API_DEFAULT).trim() || API_DEFAULT;
+  }
+
+  function showStatus(text, cls) {
+    const s = el('conn-status');
+    s.textContent = text;
+    s.className = '';
+    if (cls === 'err') s.classList.add('err');
+    else if (cls === 'busy') s.classList.add('busy');
+    else if (cls === 'warn') s.classList.add('warn');
+    else s.classList.add('ok');
+  }
+
+  function updateConnectionUi() {
+    const key = getApiKey();
+    const sendAi = el('btn-send-ai');
+    if (!key) {
+      sendAi.disabled = true;
+      showStatus('未接続', 'warn');
+    } else if (!relayDone) {
+      sendAi.disabled = false;
+      showStatus('relay未実行', 'warn');
+    } else {
+      sendAi.disabled = false;
+      showStatus('接続待機', 'ok');
+    }
+  }
+
+  function saveAll() {
+    localStorage.setItem(LS.messages, JSON.stringify(messages));
+    localStorage.setItem(LS.meeting, JSON.stringify(meetingState));
+    localStorage.setItem(LS.phases, JSON.stringify(phases));
+    localStorage.setItem(LS.relay, relayDone ? '1' : '0');
+    localStorage.setItem(LS.auto, autoMode ? '1' : '0');
+  }
+
+  function loadStorage() {
+    try {
+      const m = localStorage.getItem(LS.messages);
+      if (m) messages = JSON.parse(m);
+      if (!Array.isArray(messages)) messages = [];
+    } catch (e) {
+      logDbg('ERROR', 'messages JSON parse: ' + e.message);
+      messages = [];
+    }
+    try {
+      const ms = localStorage.getItem(LS.meeting);
+      if (ms) {
+        const o = JSON.parse(ms);
+        meetingState = Object.assign(meetingState, o);
+      }
+    } catch (e) {
+      logDbg('ERROR', 'meetingState parse: ' + e.message);
+    }
+    if (!meetingState.session_id) meetingState.session_id = 'sess_' + Date.now();
+    ['agreed', 'conflict', 'pending'].forEach((k) => {
+      if (!Array.isArray(meetingState[k])) meetingState[k] = [];
+    });
+
+    try {
+      const p = localStorage.getItem(LS.phases);
+      if (p) phases = JSON.parse(p);
+    } catch (e) {
+      logDbg('ERROR', 'phases parse: ' + e.message);
+    }
+    if (!Array.isArray(phases) || phases.length === 0) phases = JSON.parse(JSON.stringify(DEFAULT_PHASES));
+
+    relayDone = localStorage.getItem(LS.relay) === '1';
+    autoMode = localStorage.getItem(LS.auto) === '1';
+  }
+
+  function getPhaseByNumber(num) {
+    return phases.find((p) => p.number === num) || phases[0];
+  }
+
+  function buildPrompt(phase) {
+    const recentMsgs = messages.slice(-10);
+    const readList = recentMsgs.map((m) => 'queue#' + m.queue_index + ' [' + m.speaker + ']: ' + m.content).join('\n');
+
+    recentMsgs.forEach((m) => {
+      if (!Array.isArray(m.read_by)) m.read_by = [];
+      if (!m.read_by.includes(phase.assigned_ai)) m.read_by.push(phase.assigned_ai);
+    });
+
+    return (
+      'SESSION: ' + meetingState.session_id + '\n' +
+      'PHASE: ' + phase.number + ' / ' + phase.label + ' / ROLE: ' + phase.role + '\n' +
+      'PROJECT: ' + meetingState.project + '\n' +
+      'TOPIC: ' + meetingState.current_topic + '\n\n' +
+      '【読み込んだ発言】\n' + readList + '\n\n' +
+      '【現在の会議状態】\n' +
+      'AGREED: ' + meetingState.agreed.map((a) => a.summary).join(' / ') + '\n' +
+      'CONFLICT: ' + meetingState.conflict.map((c) => c.summary).join(' / ') + '\n' +
+      'PENDING: ' + meetingState.pending.map((p) => p.summary).join(' / ') + '\n\n' +
+      '【あなたの役割】\n' +
+      'あなたは ' + phase.assigned_ai + ' です。role: ' + phase.role + '。\n' +
+      '前の発言を読み、重複ではなく差分を出してください。\n' +
+      '矛盾・前提不足があれば必ず指摘してください。\n' +
+      'まだ実装・保存・GitHub反映はしないでください。'
+    );
+  }
+
+  function appendMessage(obj) {
+    messages.push(obj);
+    saveAll();
+    renderMeeting();
+  }
+
+  function removeMessage(msgId) {
+    const idx = messages.findIndex((m) => m.id === msgId);
+    if (idx === -1) return;
+    messages.splice(idx, 1);
+    saveAll();
+    renderMeeting();
+  }
+
+  function findMsg(msgId) {
+    return messages.find((m) => m.id === msgId);
+  }
+
+  function addToState(kind, msgId) {
+    const m = findMsg(msgId);
+    if (!m) {
+      logDbg('WARN', 'addToState: msg not found ' + msgId);
+      return;
+    }
+    const item = { msg_id: msgId, speaker: m.speaker, summary: summarize60(m.content) };
+    meetingState[kind].push(item);
+    m.status = kind === 'agreed' ? 'agreed' : kind === 'conflict' ? 'conflict' : 'pending';
+    saveAll();
+    renderRight();
+  }
+
+  window.removeFromState = function (kind, msgId) {
+    meetingState[kind] = meetingState[kind].filter((x) => x.msg_id !== msgId);
+    saveAll();
+    renderRight();
+  };
+
+  window.addToState = addToState;
+  window.removeMessage = removeMessage;
+
+  window.copyBubble = function (msgId) {
+    const m = findMsg(msgId);
+    if (!m) return;
+    navigator.clipboard.writeText(m.content).then(
+      () => logDbg('OK', 'clipboard: msg ' + msgId),
+      (e) => logDbg('ERROR', 'clipboard failed: ' + (e && e.message))
+    );
+  };
+
+  function renderRight() {
+    el('rp-topic-text').textContent = meetingState.current_topic || '（未設定）';
+    el('topic-input').value = meetingState.current_topic || '';
+    el('project-label').textContent = 'PROJECT: ' + (meetingState.project || '—');
+    el('rp-next-action').value = meetingState.next_action || '';
+
+    function fill(listEl, arr, kind) {
+      listEl.innerHTML = '';
+      arr.forEach((item) => {
+        const row = document.createElement('div');
+        row.className = 'rp-item';
+        row.innerHTML =
+          '<span class="rp-speaker"></span><span class="rp-summary"></span>' +
+          '<button type="button" class="x" data-act="rm" title="削除">✕</button>';
+        row.querySelector('.rp-speaker').textContent = item.speaker;
+        row.querySelector('.rp-summary').textContent = item.summary;
+        row.querySelector('.x').addEventListener('click', () => window.removeFromState(kind, item.msg_id));
+        listEl.appendChild(row);
+      });
+    }
+    fill(el('rp-agreed-list'), meetingState.agreed, 'agreed');
+    fill(el('rp-conflict-list'), meetingState.conflict, 'conflict');
+    fill(el('rp-pending-list'), meetingState.pending, 'pending');
+  }
+
+  function renderMeeting() {
+    const root = el('chat-scroll');
+    root.innerHTML = '';
+    messages.forEach((m) => {
+      const brow = document.createElement('div');
+      brow.className = 'brow ' + speakerClass(m.speaker);
+      if (m.kind === 'system' || m.kind === 'error') brow.classList.add('sp-system');
+      brow.dataset.msgId = m.id;
+      brow.innerHTML =
+        '<div class="avatar"></div>' +
+        '<div class="bubble-wrap">' +
+          '<div class="bmeta"></div>' +
+          '<div class="bubble"></div>' +
+          '<div class="bubble-tools">' +
+            '<button type="button" class="btn" data-a="agreed">✅</button>' +
+            '<button type="button" class="btn" data-a="conflict">⚠</button>' +
+            '<button type="button" class="btn" data-a="pending">🔄</button>' +
+            '<button type="button" class="btn" data-a="copy">📋</button>' +
+            '<button type="button" class="btn" data-a="del">✕</button>' +
+          '</div>' +
+        '</div>';
+      brow.querySelector('.avatar').textContent = initialFor(m.speaker);
+      brow.querySelector('.bmeta').textContent =
+        m.speaker + ' · phase[' + m.phase + '] · ' + m.time + ' · queue#' + m.queue_index;
+      const bubble = brow.querySelector('.bubble');
+      bubble.textContent = m.content;
+      if (m.kind === 'error') bubble.style.borderColor = 'var(--err)';
+      brow.querySelectorAll('.bubble-tools button').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const a = btn.getAttribute('data-a');
+          if (a === 'copy') window.copyBubble(m.id);
+          else if (a === 'del') removeMessage(m.id);
+          else addToState(a, m.id);
+        });
+      });
+      root.appendChild(brow);
+    });
+    root.scrollTop = root.scrollHeight;
+  }
+
+  function renderPhaseBar() {
+    const bar = el('phase-bar');
+    bar.innerHTML = '';
+    phases.forEach((p) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ph' + (p.number === currentPhaseNo ? ' active' : '');
+      b.textContent = 'P' + p.number + ' ' + p.label;
+      b.addEventListener('click', () => {
+        currentPhaseNo = p.number;
+        el('cv-phase').value = String(p.number);
+        renderPhaseBar();
+      });
+      bar.appendChild(b);
+    });
+  }
+
+  function populateSelects() {
+    const sp = el('cv-speaker');
+    sp.innerHTML = '';
+    SPEAKERS.forEach((s) => {
+      const o = document.createElement('option');
+      o.value = s;
+      o.textContent = s;
+      sp.appendChild(o);
+    });
+    const kd = el('cv-kind');
+    kd.innerHTML = '';
+    KINDS.forEach((k) => {
+      const o = document.createElement('option');
+      o.value = k;
+      o.textContent = k;
+      kd.appendChild(o);
+    });
+    const ph = el('cv-phase');
+    ph.innerHTML = '';
+    phases.forEach((p) => {
+      const o = document.createElement('option');
+      o.value = String(p.number);
+      o.textContent = p.number + ' — ' + p.label;
+      ph.appendChild(o);
+    });
+    ph.value = String(currentPhaseNo);
+  }
+
+  async function callOpenRouterStream(prompt, phase) {
+    const key = getApiKey();
+    const url = getApiUrl();
+    const model = phase.model;
+    if (!key) throw new Error('APIキー未入力');
+    if (!model) throw new Error('モデル未設定（phase ' + phase.number + '）');
+
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + key,
+      },
+      body: JSON.stringify({
+        model,
+        stream: true,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error('OpenRouter ' + resp.status + ': ' + errText.slice(0, 200));
+    }
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    let full = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() || '';
+      for (const line of lines) {
+        const t = line.trim();
+        if (!t.startsWith('data:')) continue;
+        const data = t.slice(5).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const j = JSON.parse(data);
+          const delta = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
+          if (delta) full += delta;
+        } catch (_) {}
+      }
+    }
+    return full;
+  }
+
+  function insertReadingIndicator(phase, recentMsgs) {
+    const id = 'reading-' + Date.now();
+    const root = el('chat-scroll');
+    const brow = document.createElement('div');
+    brow.className = 'brow system reading-indicator';
+    brow.id = id;
+    const lines = recentMsgs.map((m) => 'queue#' + m.queue_index + ': ' + m.speaker + ' — ' + summarize60(m.content).slice(0, 30));
+    brow.innerHTML =
+      '<div class="avatar">⚙</div>' +
+      '<div class="bubble-wrap">' +
+        '<div class="bubble reading-bubble"></div>' +
+      '</div>';
+    brow.querySelector('.reading-bubble').innerHTML =
+      phase.assigned_ai + ' が読んでいます：<ul><li>' + lines.join('</li><li>') + '</li></ul>';
+    root.appendChild(brow);
+    root.scrollTop = root.scrollHeight;
+    return id;
+  }
+
+  function removeEl(id) {
+    const n = document.getElementById(id);
+    if (n) n.remove();
+  }
+
+  async function onSendAi() {
+    const phase = getPhaseByNumber(Number(el('cv-phase').value));
+    const key = getApiKey();
+    if (!key) {
+      logDbg('WARN', '送信抑止: APIキーなし');
+      return;
+    }
+    if (!relayDone) {
+      logDbg('WARN', 'Relay未実行のまま送信しました（仕様上は警告表示のみ）');
+    }
+    const prompt = buildPrompt(phase);
+    const recent = messages.slice(-10);
+    const rid = insertReadingIndicator(phase, recent.length ? recent : [{ queue_index: '-', speaker: '—', content: '（発言なし）' }]);
+    showStatus('● ' + phase.assigned_ai + ' 思考中…', 'busy');
+    try {
+      const text = await callOpenRouterStream(prompt, phase);
+      removeEl(rid);
+      const msg = {
+        id: 'msg_' + Date.now() + '_' + messages.length,
+        session_id: meetingState.session_id,
+        parent_id: meetingState.session_id,
+        queue_index: messages.length,
+        speaker: phase.assigned_ai,
+        phase: phase.number,
+        kind: 'message',
+        content: text || '（空応答）',
+        status: 'open',
+        time: jstNow(),
+        read_by: [],
+      };
+      appendMessage(msg);
+      updateConnectionUi();
+      logDbg('OK', 'OpenRouter 応答受領 phase ' + phase.number);
+    } catch (e) {
+      removeEl(rid);
+      showStatus('エラー', 'err');
+      logDbg('ERROR', String(e && e.message ? e.message : e));
+      const errMsg = {
+        id: 'msg_' + Date.now() + '_' + messages.length,
+        session_id: meetingState.session_id,
+        parent_id: meetingState.session_id,
+        queue_index: messages.length,
+        speaker: 'SYSTEM',
+        phase: phase.number,
+        kind: 'error',
+        content: 'OpenRouter エラー: ' + (e && e.message ? e.message : String(e)),
+        status: 'open',
+        time: jstNow(),
+        read_by: [],
+      };
+      appendMessage(errMsg);
+      showStatus('エラー', 'err');
+    }
+  }
+
+  function onAddHumanMsg() {
+    const speaker = el('cv-speaker').value;
+    const kind = el('cv-kind').value;
+    const phase = Number(el('cv-phase').value);
+    const body = el('cv-body').value.trim();
+    if (!body) {
+      logDbg('WARN', '空の発言は追加しません');
+      return;
+    }
+    const msg = {
+      id: 'msg_' + Date.now() + '_' + messages.length,
+      session_id: meetingState.session_id,
+      parent_id: meetingState.session_id,
+      queue_index: messages.length,
+      speaker,
+      phase,
+      kind,
+      content: body,
+      status: 'open',
+      time: jstNow(),
+      read_by: [],
+    };
+    appendMessage(msg);
+    el('cv-body').value = '';
+  }
+
+  function layoutDiagnose() {
+    logDbg('INFO', '--- レイアウト診断 ---');
+    const ids = ['app', 'workspace', 'main-panel', 'panels', 'panel-meeting', 'chat-scroll', 'compose', 'right-panel'];
+    ids.forEach((id) => {
+      const n = document.getElementById(id);
+      if (!n) {
+        logDbg('WARN', '#' + id + ' 不在');
+        return;
+      }
+      const r = n.getBoundingClientRect();
+      const st = window.getComputedStyle(n);
+      logDbg('INFO', '#' + id + ' w=' + Math.round(r.width) + ' h=' + Math.round(r.height) + ' overflowY=' + st.overflowY);
+    });
+    const cs = el('chat-scroll');
+    if (cs) logDbg(cs.scrollHeight > 0 ? 'OK' : 'WARN', '#chat-scroll scrollHeight=' + cs.scrollHeight);
+  }
+
+  function discussionSummaryMd() {
+    const d = new Date().toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo' });
+    return (
+      '# Discussion Summary\n' +
+      'SESSION: ' + meetingState.session_id + '\n' +
+      'DATE: ' + d + '\n' +
+      'PROJECT: ' + meetingState.project + '\n' +
+      'TOPIC: ' + meetingState.current_topic + '\n\n' +
+      '## AGREED\n' +
+      meetingState.agreed.map((a) => '- ' + a.speaker + ': ' + a.summary).join('\n') + '\n\n' +
+      '## CONFLICT\n' +
+      meetingState.conflict.map((c) => '- ' + c.speaker + ': ' + c.summary).join('\n') + '\n\n' +
+      '## PENDING\n' +
+      meetingState.pending.map((p) => '- ' + p.speaker + ': ' + p.summary).join('\n') + '\n\n' +
+      '## NEXT ACTION\n' +
+      (meetingState.next_action || '（空）') + '\n'
+    );
+  }
+
+  function reportMd() {
+    const summary = discussionSummaryMd();
+    const counts = {};
+    phases.forEach((p) => {
+      counts[p.number] = 0;
+    });
+    messages.forEach((m) => {
+      if (counts[m.phase] != null) counts[m.phase]++;
+    });
+    let plog = '';
+    phases.forEach((p) => {
+      plog += 'Phase ' + p.number + ' (' + p.label + '): ' + counts[p.number] + '件\n';
+    });
+    return (
+      '# Session Report\n' +
+      'SESSION: ' + meetingState.session_id + '\n' +
+      'PHASES COMPLETED: 1〜' + phases.length + '\n' +
+      'TOTAL MESSAGES: ' + messages.length + '\n\n' +
+      '## Summary\n' +
+      summary + '\n' +
+      '## Phase Log\n' +
+      plog
+    );
+  }
+
+  function wireUi() {
+    document.querySelectorAll('.sb-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-panel');
+        document.querySelectorAll('.sb-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.panel').forEach((p) => p.classList.toggle('active', p.id === id));
+      });
+    });
+
+    el('btn-relay').addEventListener('click', () => {
+      relayDone = true;
+      localStorage.setItem(LS.relay, '1');
+      updateConnectionUi();
+      logDbg('OK', 'Relay実行（内部フラグのみ・外部通信なし）');
+    });
+
+    el('topic-input').addEventListener('input', () => {
+      meetingState.current_topic = el('topic-input').value;
+      el('rp-topic-text').textContent = meetingState.current_topic || '（未設定）';
+      saveAll();
+    });
+
+    el('rp-next-action').addEventListener('input', () => {
+      meetingState.next_action = el('rp-next-action').value;
+      saveAll();
+    });
+
+    el('cv-phase').addEventListener('change', () => {
+      currentPhaseNo = Number(el('cv-phase').value);
+      renderPhaseBar();
+    });
+
+    el('btn-add-msg').addEventListener('click', onAddHumanMsg);
+    el('btn-send-ai').addEventListener('click', onSendAi);
+
+    el('set-api-key').addEventListener('input', () => {
+      localStorage.setItem(LS.key, el('set-api-key').value);
+      updateConnectionUi();
+    });
+
+    el('btn-settings-save').addEventListener('click', () => {
+      meetingState.project = el('set-project').value.trim() || '（未設定）';
+      localStorage.setItem(LS.key, el('set-api-key').value.trim());
+      localStorage.setItem(LS.url, el('set-api-url').value.trim() || API_DEFAULT);
+      autoMode = el('set-auto-mode').checked;
+      try {
+        const pj = JSON.parse(el('set-phases-json').value);
+        if (!Array.isArray(pj)) throw new Error('phases は配列');
+        phases = pj;
+      } catch (e) {
+        logDbg('ERROR', 'phases JSON: ' + e.message);
+        return;
+      }
+      localStorage.setItem(LS.phases, JSON.stringify(phases));
+      localStorage.setItem(LS.auto, autoMode ? '1' : '0');
+      saveAll();
+      populateSelects();
+      renderPhaseBar();
+      renderRight();
+      updateConnectionUi();
+      logDbg('OK', '設定を保存しました');
+    });
+
+    el('btn-export-summary').addEventListener('click', () => {
+      navigator.clipboard.writeText(discussionSummaryMd()).then(
+        () => logDbg('OK', 'discussion_summary をコピー'),
+        (e) => logDbg('ERROR', 'copy ' + e)
+      );
+    });
+    el('btn-export-json').addEventListener('click', () => {
+      const t = JSON.stringify(messages, null, 2);
+      navigator.clipboard.writeText(t).then(
+        () => logDbg('OK', 'full_history.json をコピー'),
+        (e) => logDbg('ERROR', 'copy ' + e)
+      );
+    });
+    el('btn-export-report').addEventListener('click', () => {
+      navigator.clipboard.writeText(reportMd()).then(
+        () => logDbg('OK', 'report.md をコピー'),
+        (e) => logDbg('ERROR', 'copy ' + e)
+      );
+    });
+
+    el('btn-dbg-copy').addEventListener('click', () => {
+      navigator.clipboard.writeText(el('debug-log').textContent).then(
+        () => logDbg('OK', 'デバッグログをコピー'),
+        (e) => logDbg('ERROR', 'copy ' + e)
+      );
+    });
+    el('btn-dbg-clear').addEventListener('click', () => {
+      el('debug-log').textContent = '';
+      debugErrorCount = 0;
+      el('badge-dbg').textContent = '';
+    });
+  }
+
+  function syncSettingsFields() {
+    el('set-project').value = meetingState.project || '';
+    el('set-api-key').value = localStorage.getItem(LS.key) || '';
+    el('set-api-url').value = getApiUrl();
+    el('set-auto-mode').checked = autoMode;
+    el('set-phases-json').value = JSON.stringify(phases, null, 2);
+  }
+
+  window.addEventListener('error', (ev) => {
+    logDbg('ERROR', ev.message + ' @ ' + (ev.filename || '') + ':' + ev.lineno);
+  });
+  window.addEventListener('unhandledrejection', (ev) => {
+    logDbg('ERROR', 'unhandledrejection: ' + (ev.reason && ev.reason.message ? ev.reason.message : String(ev.reason)));
+  });
+
+  loadStorage();
+  populateSelects();
+  renderPhaseBar();
+  renderMeeting();
+  renderRight();
+  syncSettingsFields();
+  wireUi();
+  updateConnectionUi();
+  logDbg('INFO', 'CORTEX Mesh Meeting Console v0.1 起動');
+  layoutDiagnose();
+})();
+  </script>
+</body>
+</html>
