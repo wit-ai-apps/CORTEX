@@ -12,6 +12,13 @@ LOCKED: true
 
 ---
 
+## 【Cursor 運用】毎回の成果は **日付フォルダ** に
+
+**新規の一式は** `G:\マイドライブ\AI_VAULT\handoff\YYYY-MM-DD_HHMM_件名\` **を新設してその中に置く。**  
+詳細: `G:\マイドライブ\Cursor\CORTEX\context\2026-05-18_1945_CONTEXT_Cursor_handoff-per-delivery-folders.md`
+
+---
+
 ## 絶対ルール
 
 すべての作業前にこのファイルを確認すること。  
