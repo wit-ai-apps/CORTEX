@@ -1,7 +1,8 @@
 /**
- * AI_VAULT_API — GAS Web App (Phase A)
+ * AI_VAULT_API — GAS Web App (Phase A + Phase2 メタ情報)
  * 手順: script.google.com で新規プロジェクト AI_VAULT_API を作成し、本ファイルを Code.gs に貼り付けてデプロイ。
  * 参照: 2026-05-18_1640_instruction_Cursor-GAS-AI-VAULT-API.md
+ *       2026-05-18_1820_instruction_Cursor-GAS-Phase2-metadata.md
  *
  * 前提: Google ドライブに「AI_VAULT」フォルダと以下の子フォルダが存在すること。
  *   _index, inbox, discussion, proposal, decisions, instructions, reports, history, memory
@@ -76,8 +77,19 @@ function handleSave(e, body) {
   var title = body.title || "untitled";
   var ai_name = body.ai_name || "unknown";
   var content = body.content || "";
-  var tags = (body.tags || []).join(",");
-  var project = body.project || "";
+  var project = body.project || "AI_VAULT";
+  var version = body.version || "";
+  var session_id = body.session_id || "";
+  var parent_id = body.parent_id || "";
+  var source = body.source ? String(body.source) : String(ai_name || "");
+  var tagsNorm = "";
+  if (body.tags != null) {
+    if (Object.prototype.toString.call(body.tags) === "[object Array]") {
+      tagsNorm = body.tags.join(",");
+    } else {
+      tagsNorm = String(body.tags);
+    }
+  }
 
   // _index はインデックス用フォルダのため保存先にしない
   if (type === "_index") {
@@ -87,26 +99,43 @@ function handleSave(e, body) {
   var now = new Date();
   var dateStr = Utilities.formatDate(now, "Asia/Tokyo", "yyyy-MM-dd_HHmm");
   var fileName = dateStr + "_" + type + "_" + sanitize(title) + ".md";
+  var dateJst = Utilities.formatDate(now, "Asia/Tokyo", "yyyy-MM-dd HH:mm");
 
   var folder = getVaultFolder(type);
 
   var fullContent = [
-    "# " + title,
-    "",
-    "DATE: " + Utilities.formatDate(now, "Asia/Tokyo", "yyyy-MM-dd HH:mm"),
-    "AI_NAME: " + ai_name,
-    "PROJECT: " + project,
-    "TAGS: " + tags,
-    "TYPE: " + type,
-    "",
     "---",
+    "title: " + title,
+    "type: " + type,
+    "project: " + project,
+    "version: " + version,
+    "ai_name: " + ai_name,
+    "source: " + source,
+    "session_id: " + session_id,
+    "parent_id: " + parent_id,
+    "tags: " + tagsNorm,
+    "date: " + dateJst,
+    "---",
+    "",
+    "# " + title,
     "",
     content,
   ].join("\n");
 
   var file = folder.createFile(fileName, fullContent, MimeType.PLAIN_TEXT);
 
-  indexWrite(file.getId(), fileName, type, ai_name, tags, project);
+  indexWrite(
+    file.getId(),
+    fileName,
+    type,
+    ai_name,
+    tagsNorm,
+    project,
+    version,
+    session_id,
+    parent_id,
+    source,
+  );
 
   return {
     success: true,
@@ -126,9 +155,22 @@ function handleList(e) {
 
   while (files.hasNext() && result.length < limit) {
     var f = files.next();
+    var raw = f.getBlob().getDataAsString("UTF-8");
+    var meta = parseFrontmatter(raw);
     result.push({
       id: f.getId(),
+      fileName: f.getName(),
       name: f.getName(),
+      title: meta.title || f.getName(),
+      type: meta.type || type,
+      project: meta.project || "",
+      version: meta.version || "",
+      tags: meta.tags || "",
+      ai_name: meta.ai_name || "",
+      source: meta.source || "",
+      session_id: meta.session_id || "",
+      parent_id: meta.parent_id || "",
+      date: meta.date || "",
       createdTime: f.getDateCreated(),
       modifiedTime: f.getLastUpdated(),
       url: f.getUrl(),
@@ -173,8 +215,16 @@ function handleSearch(e) {
     var matchType = !type || String(row[2]) === type;
     var nameStr = String(row[1] || "").toLowerCase();
     var tagsStr = String(row[4] || "").toLowerCase();
+    var verStr = String(row[6] || "").toLowerCase();
+    var sessStr = String(row[7] || "").toLowerCase();
+    var srcStr = String(row[9] || "").toLowerCase();
     var qLower = q.toLowerCase();
-    var matchContent = nameStr.indexOf(qLower) !== -1 || tagsStr.indexOf(qLower) !== -1;
+    var matchContent =
+      nameStr.indexOf(qLower) !== -1 ||
+      tagsStr.indexOf(qLower) !== -1 ||
+      verStr.indexOf(qLower) !== -1 ||
+      sessStr.indexOf(qLower) !== -1 ||
+      srcStr.indexOf(qLower) !== -1;
 
     if (matchType && matchContent) {
       result.push({
@@ -183,6 +233,11 @@ function handleSearch(e) {
         type: row[2],
         ai_name: row[3],
         tags: row[4],
+        project: row[5] || "",
+        version: row[6] || "",
+        session_id: row[7] || "",
+        parent_id: row[8] || "",
+        source: row[9] || "",
       });
     }
   }
@@ -247,6 +302,64 @@ function sanitize(str) {
 }
 
 /**
+ * Phase A 形式（7列・最後が createdTime）のインデックスを Phase2（11列）に拡張する。
+ */
+function ensureIndexSchema(sheet) {
+  var lastCol = sheet.getLastColumn();
+  if (lastCol < 7) return;
+
+  var header = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var h6 = String(header[6] || "").trim().toLowerCase();
+  var isOldSeven =
+    lastCol === 7 &&
+    h6.indexOf("created") !== -1 &&
+    String(header[0]).trim() === "id" &&
+    String(header[5]).trim().toLowerCase() === "project";
+
+  if (!isOldSeven) return;
+
+  for (var i = 0; i < 4; i++) {
+    sheet.insertColumnAfter(6);
+  }
+
+  var newHeader = [
+    "id",
+    "fileName",
+    "type",
+    "ai_name",
+    "tags",
+    "project",
+    "version",
+    "session_id",
+    "parent_id",
+    "source",
+    "createdTime",
+  ];
+  sheet.getRange(1, 1, 1, newHeader.length).setValues([newHeader]);
+}
+
+/**
+ * Frontmatter（--- ... ---）を簡易パース。値に ": " を含む場合は未対応。
+ */
+function parseFrontmatter(content) {
+  var meta = {};
+  if (!content) return meta;
+  var match = content.match(/^---\n([\s\S]*?)\n---/);
+  if (!match) return meta;
+
+  var lines = match[1].split("\n");
+  lines.forEach(function (line) {
+    var idx = line.indexOf(": ");
+    if (idx > 0) {
+      var key = line.substring(0, idx).trim();
+      var val = line.substring(idx + 2).trim();
+      meta[key] = val;
+    }
+  });
+  return meta;
+}
+
+/**
  * _index フォルダ内の Google スプレッドシート1つをインデックスに使う。無ければ作成して移動。
  */
 function getIndexSheet() {
@@ -256,13 +369,27 @@ function getIndexSheet() {
   while (files.hasNext()) {
     var f = files.next();
     if (f.getMimeType() === MimeType.GOOGLE_SHEETS) {
-      return SpreadsheetApp.openById(f.getId()).getSheets()[0];
+      var sheet = SpreadsheetApp.openById(f.getId()).getSheets()[0];
+      ensureIndexSchema(sheet);
+      return sheet;
     }
   }
 
   var ss = SpreadsheetApp.create("AI_VAULT_index");
   var sheet = ss.getActiveSheet();
-  sheet.appendRow(["id", "fileName", "type", "ai_name", "tags", "project", "createdTime"]);
+  sheet.appendRow([
+    "id",
+    "fileName",
+    "type",
+    "ai_name",
+    "tags",
+    "project",
+    "version",
+    "session_id",
+    "parent_id",
+    "source",
+    "createdTime",
+  ]);
 
   var file = DriveApp.getFileById(ss.getId());
   file.moveTo(indexFolder);
@@ -270,9 +397,21 @@ function getIndexSheet() {
   return SpreadsheetApp.openById(ss.getId()).getSheets()[0];
 }
 
-function indexWrite(id, fileName, type, ai_name, tags, project) {
+function indexWrite(id, fileName, type, ai_name, tags, project, version, session_id, parent_id, source) {
   var sheet = getIndexSheet();
-  sheet.appendRow([id, fileName, type, ai_name, tags, project, new Date()]);
+  sheet.appendRow([
+    id,
+    fileName,
+    type,
+    ai_name,
+    tags,
+    project,
+    version || "",
+    session_id || "",
+    parent_id || "",
+    source || "",
+    new Date(),
+  ]);
 }
 
 /**

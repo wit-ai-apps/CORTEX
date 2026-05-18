@@ -1,7 +1,7 @@
-# AI_VAULT GAS Web App（Phase A）— 取り込み手順
+# AI_VAULT GAS Web App（Phase A + Phase 2）— 取り込み手順
 
-**参照指示:** `2026-05-18_1640_instruction_Cursor-GAS-AI-VAULT-API.md`  
-**実装物:** このフォルダの `Code.gs`（Claude 指示のサンプルを整理・修正済み）
+**参照指示:** `2026-05-18_1640_instruction_Cursor-GAS-AI-VAULT-API.md` / `2026-05-18_1820_instruction_Cursor-GAS-Phase2-metadata.md`  
+**実装物:** このフォルダの `Code.gs`（Claude 指示を整理・Phase2 まで反映）
 
 ## Cursor が代行できない作業
 
@@ -20,6 +20,33 @@
    - 実行するユーザー: **自分**  
    - アクセスできるユーザー: **全員**（指示書どおり。本番で締める場合は別設計）  
 5. 発行された **Web App URL** を ChatGPT Actions / 運用メモに記録  
+
+## Phase 2（メタデータ拡張）
+
+`Code.gs` は **2026-05-18 Phase2 指示**反映済みです。
+
+- **save** POST: `project`（既定 `AI_VAULT`）, `version`, `session_id`, `parent_id`, `source`, `tags`（**文字列または配列**）
+- 保存 MD は **YAML Frontmatter**（`---` … `---`）＋本文
+- **_index スプレッドシート**は列増設（version, session_id, parent_id, source）。**Phase A の7列インデックスは初回アクセス時に自動で11列へ拡張**（`createdTime` 列は右端のまま）
+- **list** は各ファイルを読み、Frontmatter から `project` / `version` / `tags` / `source` 等を返却（**Phase A 形式の旧MD**は Frontmatter なしのためフィールドは空になりがち）
+
+再デプロイ後、下記の **Phase2 受入 JSON** で save を確認できます。
+
+```json
+{
+  "action": "save",
+  "type": "discussion",
+  "title": "Metadata_Test",
+  "content": "metadata save test",
+  "ai_name": "Yui",
+  "project": "CORTEXMesh",
+  "version": "v2.0",
+  "tags": "metadata,test,actions",
+  "session_id": "session_2026-05-18_001",
+  "parent_id": "none",
+  "source": "Yui"
+}
+```
 
 ## 動作テスト（デプロイ後）
 
@@ -45,6 +72,7 @@ curl "WEB_APP_URL?action=get&id=FILE_ID"
 - `getIndexSheet`: **index.xlsx 名前提を廃止**し、`_index` 内の **Google スプレッドシート**を検索／無ければ作成してフォルダへ移動  
 - `getVaultFolder`: **hasNext なしで `next()` しない**（不足時はわかりやすい例外）  
 - `handleSave` は POST 本文を `handleRequest` から再利用（二重 parse 削減）
+- **Phase 2:** YAML Frontmatter 保存、`indexWrite` 列拡張、**旧7列インデックスの自動移行**、`list` で Frontmatter 解析、`search` で version / session_id / source もヒット
 
 ## 完了報告テンプレ（GAS 実施者向け）
 
