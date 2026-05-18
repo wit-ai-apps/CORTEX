@@ -3,6 +3,7 @@
  * 手順: script.google.com で新規プロジェクト AI_VAULT_API を作成し、本ファイルを Code.gs に貼り付けてデプロイ。
  * 参照: 2026-05-18_1640_instruction_Cursor-GAS-AI-VAULT-API.md
  *       2026-05-18_1820_instruction_Cursor-GAS-Phase2-metadata.md
+ *       2026-05-18_1840_instruction_Cursor-GAS-tags-fix.md
  *
  * 前提: Google ドライブに「AI_VAULT」フォルダと以下の子フォルダが存在すること。
  *   _index, inbox, discussion, proposal, decisions, instructions, reports, history, memory
@@ -54,7 +55,11 @@ function handleRequest(e) {
         return jsonResponse({ error: "unknown action: " + action });
     }
   } catch (err) {
-    return jsonResponse({ error: err.message || String(err) });
+    return jsonResponse({
+      success: false,
+      error: err.message || String(err),
+      stack: err.stack || "",
+    });
   }
 }
 
@@ -65,84 +70,89 @@ function jsonResponse(data) {
 /* ---------- Actions ---------- */
 
 function handleSave(e, body) {
-  if (!body) {
-    try {
-      body = JSON.parse(e.postData.contents);
-    } catch (ex) {
-      return { error: "save requires JSON POST body" };
+  try {
+    if (!body) {
+      try {
+        body = JSON.parse(e.postData.contents);
+      } catch (ex) {
+        return {
+          success: false,
+          error: "save requires JSON POST body: " + ex.message,
+          stack: ex.stack || "",
+        };
+      }
     }
-  }
 
-  var type = body.type || "inbox";
-  var title = body.title || "untitled";
-  var ai_name = body.ai_name || "unknown";
-  var content = body.content || "";
-  var project = body.project || "AI_VAULT";
-  var version = body.version || "";
-  var session_id = body.session_id || "";
-  var parent_id = body.parent_id || "";
-  var source = body.source ? String(body.source) : String(ai_name || "");
-  var tagsNorm = "";
-  if (body.tags != null) {
-    if (Object.prototype.toString.call(body.tags) === "[object Array]") {
-      tagsNorm = body.tags.join(",");
-    } else {
-      tagsNorm = String(body.tags);
+    var type = body.type || "inbox";
+    var title = body.title || "untitled";
+    var ai_name = String(body.ai_name || "unknown");
+    var content = String(body.content || "");
+    var project = String(body.project || "AI_VAULT");
+    var version = String(body.version || "");
+    var session_id = String(body.session_id || "");
+    var parent_id = String(body.parent_id || "");
+    var source = String(body.source || body.ai_name || "");
+    var tagsNorm = Array.isArray(body.tags) ? body.tags.join(",") : String(body.tags || "");
+
+    // _index はインデックス用フォルダのため保存先にしない
+    if (type === "_index") {
+      type = "inbox";
     }
+
+    var now = new Date();
+    var dateStr = Utilities.formatDate(now, "Asia/Tokyo", "yyyy-MM-dd_HHmm");
+    var fileName = dateStr + "_" + type + "_" + sanitize(title) + ".md";
+    var dateJst = Utilities.formatDate(now, "Asia/Tokyo", "yyyy-MM-dd HH:mm");
+
+    var folder = getVaultFolder(type);
+
+    var fullContent = [
+      "---",
+      "title: " + title,
+      "type: " + type,
+      "project: " + project,
+      "version: " + version,
+      "ai_name: " + ai_name,
+      "source: " + source,
+      "session_id: " + session_id,
+      "parent_id: " + parent_id,
+      "tags: " + tagsNorm,
+      "date: " + dateJst,
+      "---",
+      "",
+      "# " + title,
+      "",
+      content,
+    ].join("\n");
+
+    var file = folder.createFile(fileName, fullContent, MimeType.PLAIN_TEXT);
+
+    indexWrite(
+      file.getId(),
+      fileName,
+      type,
+      ai_name,
+      tagsNorm,
+      project,
+      version,
+      session_id,
+      parent_id,
+      source,
+    );
+
+    return {
+      success: true,
+      id: file.getId(),
+      fileName: fileName,
+      url: file.getUrl(),
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: "handleSave failed: " + (err.message || String(err)),
+      stack: err.stack || "",
+    };
   }
-
-  // _index はインデックス用フォルダのため保存先にしない
-  if (type === "_index") {
-    type = "inbox";
-  }
-
-  var now = new Date();
-  var dateStr = Utilities.formatDate(now, "Asia/Tokyo", "yyyy-MM-dd_HHmm");
-  var fileName = dateStr + "_" + type + "_" + sanitize(title) + ".md";
-  var dateJst = Utilities.formatDate(now, "Asia/Tokyo", "yyyy-MM-dd HH:mm");
-
-  var folder = getVaultFolder(type);
-
-  var fullContent = [
-    "---",
-    "title: " + title,
-    "type: " + type,
-    "project: " + project,
-    "version: " + version,
-    "ai_name: " + ai_name,
-    "source: " + source,
-    "session_id: " + session_id,
-    "parent_id: " + parent_id,
-    "tags: " + tagsNorm,
-    "date: " + dateJst,
-    "---",
-    "",
-    "# " + title,
-    "",
-    content,
-  ].join("\n");
-
-  var file = folder.createFile(fileName, fullContent, MimeType.PLAIN_TEXT);
-
-  indexWrite(
-    file.getId(),
-    fileName,
-    type,
-    ai_name,
-    tagsNorm,
-    project,
-    version,
-    session_id,
-    parent_id,
-    source,
-  );
-
-  return {
-    success: true,
-    id: file.getId(),
-    fileName: fileName,
-    url: file.getUrl(),
-  };
 }
 
 function handleList(e) {

@@ -1,7 +1,7 @@
 # AI_VAULT GAS Web App（Phase A + Phase 2）— 取り込み手順
 
-**参照指示:** `2026-05-18_1640_instruction_Cursor-GAS-AI-VAULT-API.md` / `2026-05-18_1820_instruction_Cursor-GAS-Phase2-metadata.md`  
-**実装物:** このフォルダの `Code.gs`（Claude 指示を整理・Phase2 まで反映）
+**参照指示:** `2026-05-18_1640` / `1820` / **`1840_tags-fix`** / 保管ルール `1850`  
+**実装物:** このフォルダの `Code.gs`（**GAS 正本のミラー**・Phase2 + 2b まで反映）
 
 ## Cursor が代行できない作業
 
@@ -48,6 +48,16 @@
 }
 ```
 
+## Phase 2b（tags / エラー JSON / 2026-05-18_1840）
+
+- **tags**: `Array.isArray` なら `join(',')`、それ以外は `String(body.tags || '')`
+- **handleSave**: 全体 `try/catch`、`success: false` + `stack` を返却可能
+- **handleRequest** 上位 **catch**: `success: false` + `error` + `stack`
+
+## LOCKED 保管ルールとの関係
+
+`2026-05-18_1850` により **GAS 正本は GAS エディタのみ**。**本フォルダの `Code.gs` は差分共有・バックアップ用ミラー**。運用変更時は `CORTEX/context/2026-05-18_1850_CONTEXT_Cursor_file-location-rules_v1.md` を参照。
+
 ## 動作テスト（デプロイ後）
 
 `WEB_APP_URL` を実 URL に置き換えて実行。
@@ -73,6 +83,7 @@ curl "WEB_APP_URL?action=get&id=FILE_ID"
 - `getVaultFolder`: **hasNext なしで `next()` しない**（不足時はわかりやすい例外）  
 - `handleSave` は POST 本文を `handleRequest` から再利用（二重 parse 削減）
 - **Phase 2:** YAML Frontmatter 保存、`indexWrite` 列拡張、**旧7列インデックスの自動移行**、`list` で Frontmatter 解析、`search` で version / session_id / source もヒット
+- **Phase 2b:** tags 安全化・`handleSave` / `handleRequest` の **success: false + stack** エラー JSON
 
 ## 完了報告テンプレ（GAS 実施者向け）
 
